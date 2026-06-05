@@ -1,2 +1,5 @@
 [phases.setup]
 nixPkgs = ["glib", "pango", "harfbuzz", "fontconfig", "freetype", "cairo", "gobject-introspection"]
+
+[phases.build]
+cmds = ["DJANGO_SETTINGS_MODULE=config.settings.collectstatic python manage.py collectstatic --noinput --skip-checks"]
