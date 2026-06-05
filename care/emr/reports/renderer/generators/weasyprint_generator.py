@@ -3,7 +3,13 @@ from typing import Any, Literal
 
 from django.http import HttpResponse
 from pydantic import Field
-from weasyprint import CSS, HTML
+
+try:
+    from weasyprint import CSS, HTML
+    WEASYPRINT_AVAILABLE = True
+except OSError:
+    CSS = HTML = None
+    WEASYPRINT_AVAILABLE = False
 
 from care.emr.reports.renderer.generators.base import BaseOptions, BaseOutputGenerator
 
@@ -27,6 +33,9 @@ class WeasyPrintGenerator(BaseOutputGenerator):
     def generate(
         self, html: str, options: WeasyPrintGeneratorOptions | None = None
     ) -> bytes:
+        if not WEASYPRINT_AVAILABLE:
+            msg = "PDF generation is unavailable: WeasyPrint system libraries not installed."
+            raise Exception(msg)
         options = options or WeasyPrintGeneratorOptions()
         try:
             html_obj = self.HTML(string=html)
@@ -102,9 +111,10 @@ class WeasyPrintGenerator(BaseOutputGenerator):
 
 
 def _register():
-    from care.emr.reports.renderer.generators.registry import GeneratorRegistry
+    if WEASYPRINT_AVAILABLE:
+        from care.emr.reports.renderer.generators.registry import GeneratorRegistry
 
-    GeneratorRegistry.register("pdf", WeasyPrintGenerator, "application/pdf", ".pdf")
+        GeneratorRegistry.register("pdf", WeasyPrintGenerator, "application/pdf", ".pdf")
 
 
 _register()
